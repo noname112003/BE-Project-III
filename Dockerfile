@@ -1,10 +1,14 @@
 # Stage 1: Build the application
-FROM maven:3.8.5-openjdk-17 AS build
+FROM gradle:7.6.0-jdk17 AS build
 WORKDIR /app
-# Copy all project files to the build container
+# Copy only Gradle configuration files to cache dependencies first
+COPY build.gradle settings.gradle ./
+RUN gradle build -x test --no-daemon || return 0
+
+# Copy the rest of the project files
 COPY . .
-# Run Maven to clean and build the project, skipping tests
-RUN mvn clean package -DskipTests
+# Build the application, skipping tests
+RUN gradle clean build -x test --no-daemon
 
 # Stage 2: Create the runtime image
 FROM openjdk:17.0.1-jdk-slim
