@@ -1,0 +1,2044 @@
+openapi: "3.0.1"
+info:
+    title: API Title
+    version: "1.0"
+servers:
+    - url: https://localhost:8080/v1
+paths:
+    /auth/sign-in:
+        post:
+            tags:
+                - auth
+            summary: User logs in
+            description: User logs in.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                password:
+                                    type: string
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Sign in successfully
+                                    data:
+                                        type: object
+                                        properties:
+                                            user:
+                                                type: object
+                                                properties:
+                                                    id:
+                                                        type: number
+                                                        example: 1
+                                                    email:
+                                                        type: string
+                                                        format: email
+                                                    type:
+                                                        type: string
+                                                        example: Bearer token
+                                                    accessToken:
+                                                        type: string
+                                                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBlMGVmODgxMzFhODEyOWExZGRhMWYiLCJlbWFpbCI6ImFzZGFkc0BnbWFpbC5jb20iLCJpYXQiOjE3MTIxOTczNjgsImV4cCI6MTcxMjIwMDk2OH0.WCdF_fppVaJblIbRgk22tzGhbrS9Uil8D1-7-BdVKIQ"
+                                                    refreshToken:
+                                                        type: string
+                                                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjBlMGVmODgxMzFhODEyOWExZGRhMWYiLCJlbWFpbCI6ImFzZGFkc0BnbWFpbC5jb20iLCJpYXQiOjE3MTIxOTczNjh9.4wXJGeslxCsf4Wv9huFj0J4tgfq5Cm9P7VT2zCZTd2M"
+                                                    role:
+                                                        $ref: "#/components/schemas/Role"
+
+                "401":
+                    description: Fail to sign in
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Email or password is incorrect.
+    /products/{id}:
+        get:
+            tags:
+                - products
+            summary: Get product info by id
+            description: Get product info by id
+            parameters:
+                - name: id
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            product:
+                                                $ref: "#/components/schemas/ProductInfo"
+                "404":
+                    description: Product id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product id not found
+        put:
+            tags:
+                - products
+            description: inventory staff updates product info
+            parameters:
+                - name: id
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductInput"
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product is updated
+                                    data:
+                                        type: object
+                                        properties:
+                                            product:
+                                                $ref: "#/components/schemas/ProductInfo"
+
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product sku code is already existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "404":
+                    description: Product id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product id not found
+        delete:
+            tags:
+                - products
+            description: delete product
+            parameters:
+                - name: id
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product is deleted
+
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "404":
+                    description: Product id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product id not found
+    /products:
+        get:
+            tags:
+                - products
+            summary: Get list of products
+            description: "Get list of products, search for product by name"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of products per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in product name"
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            products:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/ProductInfo"
+    /products/create:
+        post:
+            tags:
+                - products
+            summary: Create new product
+            description: inventory staff creates new product
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ProductInput"
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product is created
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product sku code is already existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+
+    /products/categories:
+        get:
+            tags:
+                - categories
+            description: "get list of categories, search categories by name"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of categories per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in category name"
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            categories:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/Category"
+    /products/categories/create:
+        post:
+            tags:
+                - categories
+            description: "create new category "
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                description:
+                                    type: string
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: category code is existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+    /products/categories/{id}:
+        get:
+            tags:
+                - categories
+            description: "get category by id"
+            parameters:
+                - name: id
+                  in: path
+                  description: "category id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            category:
+                                                $ref: "#/components/schemas/Category"
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: category not found
+
+        put:
+            tags:
+                - categories
+            description: "update category "
+            parameters:
+                - name: id
+                  in: path
+                  description: "category id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                description:
+                                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            category:
+                                                $ref: "#/components/schemas/Category"
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: category id not found
+
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: category code is existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+        delete:
+            tags:
+                - categories
+            description: "delete category "
+            parameters:
+                - name: id
+                  in: path
+                  description: "category id"
+                  required: true
+                  schema:
+                      type: number
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: category id not found
+
+                "400":
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product PVN00001 is attached with this category
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+    /products/brands:
+        get:
+            tags:
+                - brands
+            description: "get list of brands, search brands by name"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of brands per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in brand name"
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            categories:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/Brand"
+    /products/brands/create:
+        post:
+            tags:
+                - brands
+            description: "create new brand "
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                description:
+                                    type: string
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: brand code is existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+    /products/brands/{id}:
+        get:
+            tags:
+                - brands
+            description: "get brand by id"
+            parameters:
+                - name: id
+                  in: path
+                  description: "brand id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            brand:
+                                                $ref: "#/components/schemas/Brand"
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: brand id not found
+
+        put:
+            tags:
+                - brands
+            description: "update brand "
+            parameters:
+                - name: id
+                  in: path
+                  description: "brand id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                code:
+                                    type: string
+                                description:
+                                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            brand:
+                                                $ref: "#/components/schemas/Brand"
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: brand id not found
+
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: brand code is existed
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+        delete:
+            tags:
+                - brands
+            description: "delete brand "
+            parameters:
+                - name: id
+                  in: path
+                  description: "brand id"
+                  required: true
+                  schema:
+                      type: number
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: brand id not found
+
+                "400":
+                    description: Bad request
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Product PVN00001 is attached with this brand
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+
+    /customers:
+        get:
+            tags:
+                - customers
+            summary: get list of customers, search for customers
+            description: "get list of customers, search for customers by name and phone number"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of customers per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in customer name or phone number"
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            customers:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/CustomerInfo"
+    /customers/create:
+        post:
+            tags:
+                - customers
+            description: "Customer service create new customer"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CustomerInput"
+
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Create new customer successfully
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Phone number already exists."
+
+    /customers/{phoneNumber}:
+        get:
+            tags:
+                - customers
+            summary: Get customer info by phone number
+            description: Get customer info by phone number
+            parameters:
+                - name: phoneNumber
+                  in: path
+                  description: "phone number of customer"
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Get customer info successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            customer:
+                                                $ref: "#/components/schemas/CustomerInfo"
+                "404":
+                    description: Customer phone number not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Customer phone number not found
+
+    /customers/{id}:
+        get:
+            tags:
+                - customers
+            summary: Get customer info by id
+            description: Get customer info by id
+            parameters:
+                - name: id
+                  in: path
+                  description: "id of customer"
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            customer:
+                                                $ref: "#/components/schemas/CustomerInfo"
+                "404":
+                    description: Customer id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Customer id not found
+        put:
+            tags:
+                - customers
+            description: "Staff updates customer info"
+            parameters:
+                - name: id
+                  in: path
+                  description: "customer id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CustomerInput"
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Update customer successfully
+                                    data:
+                                        type: object
+                                        properties:
+                                            customer:
+                                                $ref: "#/components/schemas/CustomerInfo"
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Phone number already exists.
+        delete:
+            tags:
+                - customers
+            description: "Customer service delete customer"
+            parameters:
+                - name: id
+                  in: path
+                  description: "customer id"
+                  required: true
+                  schema:
+                      type: number
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Delete customer successfully
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: id is not existed
+
+    /admin/staffs:
+        get:
+            tags:
+                - admin
+            summary: Get list of staff, search for staffs
+            description: "get list of staffs, search for staff by name or phone number"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of staffs per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in staff name or phone number"
+                  required: false
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: successful operation
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            customers:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/StaffInfo"
+    /admin/staffs/create:
+        post:
+            tags:
+                - admin
+            summary: Admin create new staff account
+            description: "Admin create account for staff"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/StaffInput"
+
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Create account successfully
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Phone number already exists.
+                "400":
+                    description: Fail to register
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Fail to register
+                                    data:
+                                        type: object
+                                        properties:
+                                            field1:
+                                                type: string
+                                                example: field1 constraint message
+                                            field2:
+                                                type: string
+                                                example: field2 constraint message
+    /staffs/{id}:
+        get:
+            tags:
+                - staffs
+            summary: Get staff info by id
+            description: Get staff info by id
+            parameters:
+                - name: id
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            staff:
+                                                $ref: "#/components/schemas/StaffInfo"
+                "404":
+                    description: Staff id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Staff id not found
+    /staffs/reset-password/{id}:
+        post:
+            tags:
+                - staffs
+            description: "Staff resets password"
+            parameters:
+                - name: id
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                currentPassword:
+                                    type: string
+                                newPassword:
+                                    type: string
+                                confirmNewPassword:
+                                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Reset password successfully
+                "403":
+                    description: Forbidden
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Current password is incorrect.
+
+    /admin/staffs/{id}:
+        get:
+            tags:
+                - admin
+            summary: Get staff info by id
+            description: Admin gets staff info by id
+            parameters:
+                - name: id
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            staff:
+                                                $ref: "#/components/schemas/StaffInfo"
+                "404":
+                    description: Staff id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Staff id not found
+        put:
+            tags:
+                - admin
+            description: "Admin update info for staff"
+            parameters:
+                - name: id
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/StaffInput"
+
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Update account successfully
+                                    data:
+                                        type: object
+                                        properties:
+                                            staff:
+                                                $ref: "#/components/schemas/StaffInfo"
+
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Phone number already exists.
+
+    /admin/reset-password/{staffId}:
+        get:
+            tags:
+                - admin
+            description: Admin reset staff password
+            parameters:
+                - name: staffId
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Reset successfully
+                                    data:
+                                        type: object
+                                        properties:
+                                            staffId:
+                                                type: number
+                                            newPassword:
+                                                type: string
+    /admin/lock-account/{staffId}:
+        get:
+            tags:
+                - admin
+            description: admin locks staff account
+            parameters:
+                - name: staffId
+                  in: path
+                  description: "staff id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Lock account successfully
+                                    data:
+                                        type: object
+                                        properties:
+                                            staff:
+                                                $ref: "#/components/schemas/StaffInfo"
+    /products/{productId}/variants/create:
+        post:
+            tags:
+                - products
+            description: "create new variant for product with productId"
+            parameters:
+                - name: productId
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/VariantInput"
+
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: sku code is existed / prop is existed
+    /products/{productId}/variants/{variantId}:
+        delete:
+            tags:
+                - products
+            description: "delete variant with variantId for product with productId"
+            parameters:
+                - name: productId
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+                - name: variantId
+                  in: path
+                  description: "variant id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: productId or variantId is not existed
+        get:
+            tags:
+                - products
+            description: "get variant with variantId for product with productId"
+            parameters:
+                - name: productId
+                  in: path
+                  description: "product id"
+                  required: true
+                  schema:
+                      type: number
+                - name: variantId
+                  in: path
+                  description: "variant id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            variant:
+                                                $ref: "#/components/schemas/VariantInfo"
+
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "404":
+                    description: Not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: productId or variantId is not existed
+    /orders:
+        get:
+            tags:
+                - orders
+            description: "get list of orders, search orders by time, code"
+            parameters:
+                - name: page
+                  in: query
+                  description: "the number of page"
+                  required: true
+                  schema:
+                      type: number
+                - name: limit
+                  in: query
+                  description: "the number of orders per page"
+                  required: true
+                  schema:
+                      type: number
+                - name: query
+                  in: query
+                  description: "String contained in order code"
+                  required: false
+                  schema:
+                      type: string
+                - name: startDate
+                  in: query
+                  description: "startDate to find order "
+                  required: false
+                  schema:
+                      type: string
+                      format: date-time
+                - name: endDate
+                  in: query
+                  description: "endDate to find order"
+                  required: false
+                  schema:
+                      type: string
+                      format: date-time
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            orders:
+                                                type: array
+                                                items:
+                                                    $ref: "#/components/schemas/OrderInfo"
+    /orders/create:
+        post:
+            tags:
+                - orders
+            description: "salesperson creates a new order"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/OrderInput"
+            responses:
+                "201":
+                    description: Created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                "401":
+                    description: Access denied
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Unauthorized
+                "409":
+                    description: Conflict
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Insufficient product quantity for the requested order.
+                                    data:
+                                        type: array
+                                        items:
+                                            type: string
+                                            example: Variant PVN00001 is not sufficient.
+    /orders/{id}:
+        get:
+            tags:
+                - orders
+            description: "get order info by id"
+            parameters:
+                - name: id
+                  in: path
+                  description: "order id"
+                  required: true
+                  schema:
+                      type: number
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    data:
+                                        type: object
+                                        properties:
+                                            order:
+                                                $ref: "#/components/schemas/OrderInfo"
+                "404":
+                    description: order id not found
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: order id not found
+
+components:
+    schemas:
+        Role:
+            type: string
+            enum:
+                - admin
+                - sales person
+                - customer service
+                - inventory staff
+        StaffInfo:
+            type: object
+            properties:
+                id:
+                    type: number
+                name:
+                    type: string
+                phoneNumber:
+                    type: string
+                email:
+                    type: string
+                    format: email
+                address:
+                    type: string
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+                role:
+                    $ref: "#/components/schemas/Role"
+                status:
+                    type: boolean
+        ProductInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                name:
+                    type: string
+                description:
+                    type: string
+                category:
+                    type: string
+                brand:
+                    type: string
+                imagePath:
+                    type: array
+                    items:
+                        type: string
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+                status:
+                    type: boolean
+                totalQuantity:
+                    type: integer
+                variants:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/VariantInfo"
+        VariantInfo:
+            type: object
+            properties:
+                id:
+                    type: integer
+                productId:
+                    type: integer
+                productName:
+                    type: string
+                creatorId:
+                    type: number
+                creatorName:
+                    type: string
+                name:
+                    type: string
+                sku:
+                    type: string
+                size:
+                    type: string
+                color:
+                    type: string
+                material:
+                    type: string
+                initialPrice:
+                    type: number
+                priceForSale:
+                    type: number
+                quantity:
+                    type: integer
+                imagePath:
+                    type: string
+                status:
+                    type: boolean
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+        CustomerInfo:
+            type: object
+            properties:
+                id:
+                    type: number
+                name:
+                    type: string
+                code:
+                    type: string
+                phoneNumber:
+                    type: string
+                email:
+                    type: string
+                    format: email
+                gender:
+                    type: boolean
+                birthday:
+                    type: string
+                    format: date-time
+                address:
+                    type: string
+                note:
+                    type: string
+                totalExpense:
+                    type: number
+                numberOfOrder:
+                    type: number
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+                status:
+                    type: boolean
+        Brand:
+            properties:
+                id:
+                    type: number
+                name:
+                    type: string
+                code:
+                    type: string
+                description:
+                    type: string
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+        Category:
+            properties:
+                id:
+                    type: number
+                name:
+                    type: string
+                code:
+                    type: string
+                description:
+                    type: string
+                createdOn:
+                    type: string
+                    format: date-time
+                updatedOn:
+                    type: string
+                    format: date-time
+        ProductInput:
+            type: object
+            properties:
+                name:
+                    type: string
+                description:
+                    type: string
+                categoryId:
+                    type: string
+                brandId:
+                    type: string
+                imagePath:
+                    type: array
+                    items:
+                        type: string
+                variants:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/VariantInput"
+
+        VariantInput:
+            type: object
+            properties:
+                name:
+                    type: string
+                productId:
+                    type: number
+                sku:
+                    type: string
+                size:
+                    type: string
+                color:
+                    type: string
+                material:
+                    type: string
+                initialPrice:
+                    type: number
+                priceForSale:
+                    type: number
+                imagePath:
+                    type: string
+        OrderInfo:
+            type: object
+            properties:
+                id:
+                    type: number
+                customerId:
+                    type: number
+                customerData:
+                    $ref: "#/components/schemas/CustomerInfo"
+                creatorId:
+                    type: number
+                creatorName:
+                    type: string
+                code:
+                    type: string
+                createdOn:
+                    type: string
+                    format: date-time
+                totalQuantity:
+                    type: number
+                note:
+                    type: string
+                cashReceive:
+                    type: number
+                cashRepay:
+                    type: number
+                totalPayment:
+                    type: number
+                paymentType:
+                    $ref: "#/components/schemas/PaymentType"
+                orderLineItems:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/OrderDetail"
+        PaymentType:
+            type: string
+            enum:
+                - cash
+                - qr code
+        OrderDetail:
+            type: object
+            properties:
+                id:
+                    type: number
+                productId:
+                    type: number
+                variantId:
+                    type: number
+                variantName:
+                    type: string
+                variantSku:
+                    type: string
+                imagePath:
+                    type: string
+                size:
+                    type: string
+                color:
+                    type: string
+                material:
+                    type: string
+                variantPrice:
+                    type: number
+                quantity:
+                    type: number
+                subtotal:
+                    type: number
+        OrderInput:
+            type: object
+            properties:
+                customerId:
+                    type: number
+                creatorId:
+                    type: number
+                totalQuantity:
+                    type: number
+                note:
+                    type: string
+                cashReceive:
+                    type: number
+                cashRepay:
+                    type: number
+                totalPayment:
+                    type: number
+                paymentType:
+                    $ref: "#/components/schemas/PaymentType"
+                orderLineItems:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/OrderDetailInput"
+        OrderDetailInput:
+            type: object
+            properties:
+                productId:
+                    type: number
+                variantId:
+                    type: number
+                quantity:
+                    type: number
+                subtotal:
+                    type: number
+        CustomerInput:
+            type: object
+            properties:
+                name:
+                    type: string
+                phoneNumber:
+                    type: string
+                email:
+                    type: string
+                    format: email
+                gender:
+                    type: boolean
+                birthday:
+                    type: string
+                    format: date-time
+                address:
+                    type: string
+                note:
+                    type: string
+        StaffInput:
+            type: object
+            properties:
+                name:
+                    type: string
+                phoneNumber:
+                    type: string
+                email:
+                    type: string
+                    format: email
+                address:
+                    type: string
+                role:
+                    $ref: "#/components/schemas/Role"
+
