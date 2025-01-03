@@ -248,8 +248,11 @@ public class UserServiceImpl implements UserService {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()){
             User updatePasswordUser = user.get();
-            if (passwordEncoder.matches(passwordRequest.getPassword(), updatePasswordUser.getPassword())){
-                throw new Exception("Password không thay đổi");
+            if(!passwordEncoder.matches(passwordRequest.getOldPassword(), updatePasswordUser.getPassword())) {
+                throw new Exception("Mật khẩu không chính xác");
+            }
+            else if (passwordEncoder.matches(passwordRequest.getPassword(), updatePasswordUser.getPassword())){
+                throw new Exception("Mật khẩu không thay đổi");
             }
             updatePasswordUser.setPassword(passwordEncoder.encode(passwordRequest.getPassword()));
             return userRepository.save(updatePasswordUser);
