@@ -1,9 +1,13 @@
 package sapo.com.service.impl;
 
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -28,6 +32,8 @@ import sapo.com.service.RoleService;
 import sapo.com.service.UserService;
 
 
+import java.io.UnsupportedEncodingException;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,6 +51,82 @@ public class UserServiceImpl implements UserService {
     private JwtProvider jwtProvider ;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private JavaMailSender mailSender;
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public static String generateNewPassword() {
+        StringBuilder code = new StringBuilder(6);
+        for (int i = 0; i < 6; i++) {
+            int randomIndex = RANDOM.nextInt(CHARACTERS.length());
+            code.append(CHARACTERS.charAt(randomIndex));
+        }
+        return code.toString();
+    }
+
+    public void sendNewPasswordEmail(String email, String newPassword)
+            throws MessagingException, UnsupportedEncodingException {
+
+        // Tạo nội dung HTML
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Reset Password</title>
+            </head>
+            <body>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu. Đây là mật khẩu mới của bạn:</p>
+                <p style="font-size: 1.5em; color: #007BFF; font-weight: bold;">%s</p>
+                <p>Vui lòng sử dụng mật khẩu này để đăng nhập và thay đổi mật khẩu nếu cần.</p>
+            </body>
+            </html>
+            """.formatted( newPassword);
+
+        // Tạo email
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+
+        helper.setTo(email);
+        helper.setSubject("Mật khẩu mới của bạn");
+        helper.setText(htmlContent, true); // true để gửi email HTML
+        helper.setFrom("quangteo7112003@gmail.com", "Sapo");
+
+        // Gửi email
+        mailSender.send(mimeMessage);
+    }
+    @Override
+    public User resetPasswordByEmail(String email) throws Exception {
+        // Lấy User từ email
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new Exception("Không tìm thấy người dùng với email: " + email);
+        }
+
+        // Tạo mật khẩu mới
+        String newPassword = generateNewPassword();
+
+        // Mã hóa mật khẩu mới
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        // Lưu mật khẩu mới vào cơ sở dữ liệu
+        userRepository.save(user);
+
+        // Gửi email chứa mật khẩu mới
+        try {
+            sendNewPasswordEmail(email, newPassword);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            throw new Exception("Không thể gửi email chứa mật khẩu mới: " + e.getMessage());
+        }
+
+        return user;
+    }
+
+
+
     @Override
     public User register(User user) throws Exception {
 //        ma hoa mat khau

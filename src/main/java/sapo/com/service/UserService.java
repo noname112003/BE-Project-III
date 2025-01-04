@@ -16,7 +16,7 @@ import sapo.com.model.entity.User;
 public interface UserService {
     User register(User user) throws Exception;
     UserResponse login (UserRequest userRequest) throws Exception;
-
+    User resetPasswordByEmail (String email) throws Exception;
     User resetPassword (Long id) throws Exception;
     Page<User> findAll(Pageable pageable);
 

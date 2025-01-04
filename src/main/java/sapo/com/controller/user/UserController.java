@@ -109,6 +109,17 @@ public class UserController {
                 .build());
 
     }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestParam String email) throws Exception {
+
+            User user = userService.resetPasswordByEmail(email);
+            return ResponseEntity.ok().body(ResponseObject.builder()
+                    .message("Mật khẩu mới đã được gửi đến email của bạn.")
+                    .status(HttpStatus.OK)
+                    .data(user)
+                    .build());
+
+    }
 
 //    @GetMapping("/check-email/{email}")
 //    public ResponseEntity<?> existEmail (@PathVariable String email) throws Exception {
