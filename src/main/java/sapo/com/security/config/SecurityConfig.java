@@ -46,7 +46,7 @@ public class SecurityConfig {
         return httpSecurity
                 .cors(config -> config.configurationSource(request -> {
                     CorsConfiguration cf = new CorsConfiguration();
-                    cf.setAllowedOrigins(List.of("http://localhost:5173","https://project-iii-b6d85.web.app/","https://project-iii-b6d85.firebaseapp.com/"));
+                    cf.setAllowedOrigins(List.of("http://localhost:5173","https://project-iii-ae375.web.app/","https://project-iii-ae375.firebaseapp.com/"));
                     cf.setAllowedMethods(List.of("*"));
                     cf.setAllowCredentials(true);
                     cf.setAllowedHeaders(List.of("*"));
